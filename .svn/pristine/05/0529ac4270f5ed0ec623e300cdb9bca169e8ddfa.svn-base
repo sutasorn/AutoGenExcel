@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AutoGenExcel
+{
+    class CRegion
+    {
+        public string RegionID { get; set; }    
+    }
+
+    class  CProvince
+    {
+        public string ProvinceID { get; set; }    
+    }
+
+    class GroupType
+    {
+        public string RegionID { get; set; }
+        public string ProvinceID { get; set; }    
+    }
+        
+    
+}

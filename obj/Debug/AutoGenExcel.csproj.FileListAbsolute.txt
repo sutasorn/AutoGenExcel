@@ -1,0 +1,40 @@
+D:\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.exe.config
+D:\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.exe
+D:\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.pdb
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.csprojResolveAssemblyReference.cache
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.Properties.Resources.resources
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.GenerateResource.Cache
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.exe
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.pdb
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.ResolveComReference.cache
+D:\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.FrmAutoGenExcel.resources
+D:\WebReport\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.exe.config
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.ResolveComReference.cache
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.exe
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.pdb
+D:\WebReport\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.exe
+D:\WebReport\AutoGenExcel\AutoGenExcel\bin\Debug\AutoGenExcel.pdb
+D:\WebReport\AutoGenExcel\AutoGenExcel\bin\Debug\NPOI.xml
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.FrmAutoGenExcel.resources
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.Properties.Resources.resources
+D:\WebReport\AutoGenExcel\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.GenerateResource.Cache
+D:\Project\AutoGenExcel\bin\Debug\AutoGenExcel.exe.config
+D:\Project\AutoGenExcel\bin\Debug\AutoGenExcel.exe
+D:\Project\AutoGenExcel\bin\Debug\AutoGenExcel.pdb
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.ResolveComReference.cache
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.FrmAutoGenExcel.resources
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.Properties.Resources.resources
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.GenerateResource.Cache
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.exe
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.pdb
+D:\Project\AutoGenExcel\obj\Debug\AutoGenExcel.csprojResolveAssemblyReference.cache
+C:\ตั๋ง\thai bev\AutoGenExcel\bin\Debug\AutoGenExcel.exe.config
+C:\ตั๋ง\thai bev\AutoGenExcel\bin\Debug\AutoGenExcel.exe
+C:\ตั๋ง\thai bev\AutoGenExcel\bin\Debug\AutoGenExcel.pdb
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.csprojResolveAssemblyReference.cache
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.ResolveComReference.cache
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.FrmAutoGenExcel.resources
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.Properties.Resources.resources
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.csproj.GenerateResource.Cache
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.exe
+C:\ตั๋ง\thai bev\AutoGenExcel\obj\Debug\AutoGenExcel.pdb

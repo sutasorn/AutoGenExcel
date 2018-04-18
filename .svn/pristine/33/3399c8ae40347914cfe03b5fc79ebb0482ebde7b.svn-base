@@ -1,0 +1,623 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Configuration;
+
+using NPOI.HSSF.Model; // InternalWorkbook  xls
+using NPOI.HSSF.UserModel; // HSSFWorkbook, HSSFSheet
+
+using NPOI.XSSF.UserModel;
+using NPOI.SS.Util;
+using System.Data.OleDb; // XSSFWorkbook, XSSFSheet  xlsx
+
+namespace AutoGenExcel
+{
+    public partial class FrmAutoGenExcel : Form
+    {
+        public FrmAutoGenExcel()
+        {
+            InitializeComponent();
+        }
+
+        private string pathTemplates = @".\Templates\";
+        private string pathOutput = @".\Output\";
+        private string pathMaster = "\\Master\\";
+
+        private DataSet ds = new DataSet();
+
+        private void FrmAutoGenExcel_Load(object sender, EventArgs e)
+        {
+            ds = getFilterData(pathMaster + "Masterประชารัฐ.xlsx");
+
+            dt = connect_excel(pathMaster + "Masterประชารัฐ.xlsx", "รายชื่อผู้ว่าราชการจังหวัด$");
+            dt.TableName = "รายชื่อผู้ว่าราชการจังหวัด";
+            ds.Tables.Add(dt);
+
+            dt = connect_excel(pathMaster + "Masterประชารัฐ.xlsx", "รายชื่อพนักงาน$");
+            dt.TableName = "รายชื่อพนักงาน";
+            ds.Tables.Add(dt);
+
+            SetcbTemplate();
+            SetcbGroupRecieve(cbGroupRecieve);
+            SetcbFilter(cbFilter, "R");
+        }
+
+        private Boolean CheckPromptGen(string value1, string value2) //การcheckการuploadไฟล์ว่าจะต้องไม่มีไฟล์ซ้ำกันน่ะ
+        {
+            if (value1 != "" && value2 != "")
+            {
+                btnGenExcel.Enabled = true;
+                return true;
+            }
+            else
+            {
+                btnGenExcel.Enabled = false;
+                return false;
+            }
+        }
+
+        private void SetcbTemplate() //แสดงlistไฟล์ในfolder(รูปแบบเอกสาร)
+        {
+            string[] Files = Directory.GetFiles(pathTemplates, "*.xls")
+                    .Union(Directory.GetFiles(pathTemplates, "*.xlsx"))
+                    .Select(x => x.Replace(pathTemplates, ""))
+                    .OrderBy(f => f)
+                    .ToArray();
+            cbTemplate.Items.Clear();
+            cbTemplate.DataSource = Files.ToArray();
+        }
+
+        private void SetcbGroupRecieve(ComboBox cb) //แสดงlistของMaster(รายการผู้รับ)
+        {
+            cb.Items.Clear();
+            cb.DisplayMember = "Text";
+            cb.ValueMember = "Value";
+            var items = new[] {
+                new { Text = "ภูมิภาค", Value = "R" },
+                new { Text = "จังหวัด", Value = "P" },
+            };
+            cb.DataSource = items;
+            cb.SelectedIndex = 0;
+        }
+
+        private OleDbConnection conn; //เชื่อมต่อฐานข้อมูล
+        private OleDbDataAdapter adapter; //ปรุบปรุงข้อมูลในฐานข้อมูล
+        private DataTable dt;//เรียกข้อมูลในตารง
+
+        private void SetcbFilter(ComboBox cb, String GroupRecieve) //การแสดงlistของคัดกรองรายการโดยจะสัมพันกับรายการผู้รับ
+        {
+            DataTable dtmp = new DataTable();
+            if (GroupRecieve == "R")//ภูมิภาค
+            {
+                dtmp = ds.Tables[0].DefaultView.ToTable(true, "RegionID");
+                dtmp.Rows.Add(new object[] { "ALL" });
+                cb.DataSource = dtmp.DefaultView.ToTable(true, "RegionID");
+                cb.DisplayMember = "RegionID";
+                cb.ValueMember = "RegionID";
+            }
+            else //จังหวัด
+            {
+                dtmp = ds.Tables[0].DefaultView.ToTable(true, "ProvinceID");
+                dtmp.Rows.Add(new object[] { "ALL" });
+                cb.DataSource = dtmp.DefaultView.ToTable(true, "ProvinceID");
+                cb.DisplayMember = "ProvinceID";
+                cb.ValueMember = "ProvinceID";
+            }
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void cbGroupRecieve_SelectedIndexChanged(object sender, EventArgs e) //รายการผู้รับเรียใช้methodcbTemplate_SelectedIndexChangedและSetcbFilter
+        {
+            cbTemplate_SelectedIndexChanged(sender, e);
+            SetcbFilter(cbFilter, cbGroupRecieve.SelectedValue.ToString());
+        }
+
+        private void cbTemplate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            panel2.Controls.Clear();
+            if ((cbTemplate.Items.Count > 0) && (cbGroupRecieve.Items.Count > 0))
+            {
+                if ((cbGroupRecieve.SelectedItem.ToString() != "") && (cbTemplate.SelectedItem.ToString() != "")) //ถ้ารูปแบบเอกสารและรายการผู้รับไม่ว่าง
+                {
+                    CheckPromptGen(cbGroupRecieve.SelectedItem.ToString(), cbTemplate.SelectedItem.ToString()); //checkการซ้ำกันของไฟล์
+                    if (File.Exists(pathTemplates + cbTemplate.SelectedItem))
+                    {
+                        if (Path.GetExtension(pathTemplates + cbTemplate.SelectedItem) == ".xls")
+                        {
+                            connect_xls(pathTemplates + cbTemplate.SelectedItem, "read");
+                        }
+                        if (Path.GetExtension(pathTemplates + cbTemplate.SelectedItem) == ".xlsx")
+                        {
+                            connect_xlsx(pathTemplates + cbTemplate.SelectedItem, "read");
+                        }
+                    }//if
+                }//if
+            }//if
+        }
+
+        private void createDtPicker(int i, string caption) //สร้างLabelกับDatetimepickerตามตำแหน่ง X Y ที่กำหนด ในpanel2
+        {
+            int positionX = 12;
+            int positionY = 20 * i;
+            //for (int i = 1; i < 6; i++)
+            //{
+            Label newLabel = new Label();
+            newLabel.Name = "newLabel" + i;
+            newLabel.Location = new System.Drawing.Point(positionX + 75, positionY);
+            newLabel.Size = new System.Drawing.Size(150, 20);
+            newLabel.Text = caption;
+            panel2.Controls.Add(newLabel);
+
+            DateTimePicker newDatePicker = new DateTimePicker();
+            newDatePicker.Name = "newDatePicker" + i;
+            newDatePicker.Location = new System.Drawing.Point(positionX + 250, positionY);
+            newDatePicker.Size = new System.Drawing.Size(200, 20);
+            panel2.Controls.Add(newDatePicker);
+            positionY += 30;
+            //}
+        }
+
+        private string copyFile(string source, string destination) //copy ไฟล์Excelไว้ใน Folder output
+        {
+            if (Directory.Exists(pathOutput))
+            { Directory.CreateDirectory("Output"); }
+            File.Copy(source, destination);
+            return destination;
+        }
+
+        private void btnGenExcel_Click(object sender, EventArgs e) //ปุ่มกด Gen Excel
+        {
+            if (File.Exists(pathTemplates + cbTemplate.SelectedItem))
+            {
+                string destination = copyFile(pathTemplates + cbTemplate.SelectedItem, pathOutput + DateTime.Now.ToString("yyyyMMdd_HHmmssf") + cbTemplate.SelectedItem); //Genชื่อไฟล์โดยมีรูปแบบ yyyMMdd_HHmmssf
+                if (Path.GetExtension(destination) == ".xls") { connect_xls(destination, "write"); }
+                if (Path.GetExtension(destination) == ".xlsx") { connect_xlsx(destination, "write"); }
+            }
+        }
+
+        public string Tagsheet(string value, string status)
+        {
+            int indexStart = value.IndexOf("<%");
+            int indexEnd = value.IndexOf("%>");
+            if (value.ToLower().Contains("<%sheet:"))
+            {
+                value = value.Replace("<%Sheet:", "");
+                indexStart = value.IndexOf("<%");
+                indexEnd = value.IndexOf("%>");
+
+                var cntF = IdxOfAll.findIdx(value, "[%").ToList();
+
+                for (int k = 0; k < cntF.Count; k++)
+                {
+                    int indexStartF = value.IndexOf("[%");
+                    int indexEndF = value.IndexOf("(%");
+                    string caption = value.Substring(indexStartF + 2, indexEndF - indexStartF - 2);
+                    char sarray = ',';
+                    string[] word = caption.Split(sarray);
+                    for (int b = 0; b < word.Length; b++)
+                    {
+                        string kum = word[b];
+                        var dtmp = new DataTable();
+
+                        if (kum == word[b])
+                        {
+                            if (status == "รายชื่อพนักงาน")
+                            {
+                                dtmp = ds.Tables["รายชื่อพนักงาน"].DefaultView.ToTable(true, word[b]);
+                            }
+                            if (status == "รายชื่อผู้ว่าราชการจังหวัด")
+                            {
+                                dtmp = ds.Tables["รายชื่อผู้ว่าราชการจังหวัด"].DefaultView.ToTable(true, word[b]);
+                            }
+                            string dummy = dtmp.Rows[0][word[b]].ToString();
+                            indexEndF = value.IndexOf("%]");
+                            value = value.Replace(value.Substring(indexStartF, indexEndF - indexStartF + 2), dummy);
+                        }
+                    }
+                }
+                indexEnd = value.IndexOf("%>");
+                value = value.Remove(indexEnd, 2);
+            }
+            return value;
+        }
+
+        public string Tagdate(string value, string mode, int cntGetdate)
+        {
+            if (value.ToLower().Contains("<%getdate:"))
+            {
+                cntGetdate = 1;
+                var cnt = IdxOfAll.findIdx(value, "<%").ToList();
+                //int cntGetdate = 1;
+                int indexStart = value.IndexOf("<%");
+                int indexEnd = value.IndexOf("%>");
+                if (indexStart > 0 && indexEnd > 0)
+                {
+                    if (mode == "read")
+                    {
+                        string caption = value.Substring(indexStart + 10, indexEnd - indexStart - 10);
+                        //DateTimePicker dummy = (DateTimePicker)panel2.Controls[i];
+                        //MessageBox.Show(dummy.Value.ToString());
+                        createDtPicker(cntGetdate, caption);
+                        //cntGetdate++;
+                    }
+                    if (mode == "write")
+                    {
+                        DateTimePicker dummy = panel2.Controls.Find("newDatePicker" + cntGetdate, true).FirstOrDefault() as DateTimePicker;//สร้าง DateTimePickerไว้panel2
+
+                        if (dummy != null)
+                        {
+                            value = value.Replace(value.Substring(indexStart, indexEnd - indexStart + 2), dummy.Value.ToString(ConfigurationManager.AppSettings["dateFormat"])); //เก็บค่าค่าวันเดือนปีลงในตัวแปรValue
+                        }
+                        //cntGetdate++;
+                    }
+                }//if
+            }
+            return value;
+        }
+
+        /*public string CheckTag(string value, string mode)
+        {
+            if (mode == "Read")
+            {
+                if (value.ToLower().Contains("<%getdate:"))
+                {
+                    Tagdate(value, mode);
+                }
+            }
+            else if (mode == "write")
+            {
+                if (value.ToLower().Contains("<%sheet:"))
+                {
+                    value = Tagsheet(value, "รายชื่อพนักงาน");
+                }
+                if (value.ToLower().Contains("<%getdate:"))
+                {
+                    value = Tagdate(value, mode);
+                }
+            }
+            return value;
+        }*/
+
+        //Excel.xls_____________________________________________________________________________________________________________________________________________
+
+        private void connect_xls(string destination, string mode) //ติดต่อExcelแบบ.xls
+        {
+            HSSFWorkbook wb_xls = null;
+            HSSFSheet sh_xls;
+
+            using (var file = new FileStream(destination, FileMode.Open, FileAccess.Read)) { wb_xls = new HSSFWorkbook(file); }
+
+            sh_xls = (HSSFSheet)wb_xls.GetSheet(wb_xls.GetSheetAt(0).SheetName);
+
+            int cntGetdate = 1;
+
+            string column = ConfigurationManager.AppSettings["excelCol"];
+
+            var columns = column.Split(',');
+
+            int excelRow = int.Parse(ConfigurationManager.AppSettings["excelRow"]);
+
+            /* string sheetN;
+             if (cbGroupRecieve.SelectedValue.ToString() == "R")
+             {
+                 sheetN = "รายชื่อผู้ว่าราชการจังหวัด";
+                 DataRow[] dr = ds.Tables[sheetN].Select("ProvinceID = " + cbFilter.SelectedValue.ToString());
+             }
+             else
+             {
+                 sheetN = "รายชื่อพนักงาน";
+                 DataRow[] dr = ds.Tables[sheetN].Select("ProvinceID  '" + cbFilter.SelectedValue.ToString() + "'");
+             }
+             int cntt = 1;
+
+             if (cbFilter.SelectedValue.ToString() == "ALL")
+             {
+                 cntt = cbFilter.Items.Count - 1;
+
+                 for (int l = 0; l <= cntt; l++)
+                 {*/
+            for (int i = 0; i <= columns.Length - 1; i++)
+            {
+                for (int j = 1; j <= excelRow; j++)
+                {
+                    string s = columns[i] + j.ToString();
+
+                    var cr = new CellReference(s);
+                    var row = sh_xls.GetRow(cr.Row);
+                    if (row == null) continue;
+                    var cell = row.GetCell(cr.Col);
+
+                    if (cell != null)
+                    {
+                        switch (cell.CellType)
+                        {
+                            case NPOI.SS.UserModel.CellType.String:
+                                {
+                                    string value = cell.StringCellValue;
+                                    var cnt = IdxOfAll.findIdx(value, "<%").ToList();
+                                    for (int p = 0; p < cnt.Count; p++) //นับtag
+                                    {
+                                        int indexStart = value.IndexOf("<%");
+                                        int indexEnd = value.IndexOf("%>");
+                                        if (value.ToLower().Contains("<%loop:>"))
+                                        {
+                                            indexStart = value.IndexOf("<%");
+                                            indexEnd = value.IndexOf("%>");
+                                            if (value.ToLower().Contains("<%sheet:"))
+                                            {
+                                                var cntF = IdxOfAll.findIdx(value, "[%").ToList();
+                                                for (int k = 0; k < cntF.Count; k++)
+                                                {
+                                                    int indexStartF = value.IndexOf("<%");
+                                                    int indexEndF = value.IndexOf("[%");
+                                                    string caption = value.Substring(indexStartF + 23, indexEndF - indexStartF - 23);
+                                                    if (caption == "รายชื่อผู้ว่าราชการจังหวัด")
+                                                    {
+                                                        Tagsheet(value, "รายชื่อผู้ว่าราชการจังหวัด");
+                                                    }
+                                                    if (caption == "รายชื่อพนักงาน")
+                                                    {
+                                                        Tagsheet(value, "รายชื่อพนักงาน");
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (value.ToLower().Contains("<%getdate:"))
+                                        {
+                                            if (indexStart > 0 && indexEnd > 0)
+                                            {
+                                                string caption = value.Substring(indexStart + 10, indexEnd - indexStart - 10);
+
+                                                switch (mode)
+                                                {
+                                                    case "read":
+                                                        {
+                                                            Tagdate(value, "read", cntGetdate);
+                                                            /* //DateTimePicker dummy = (DateTimePicker)panel2.Controls[i];
+                                                             //MessageBox.Show(dummy.Value.ToString());
+                                                             createDtPicker(cntGetdate, caption);*/
+                                                            cntGetdate++;
+                                                        } break;
+                                                    case "write":
+                                                        {
+                                                            Tagdate(value, "write", cntGetdate);
+                                                            /* DateTimePicker dummy = panel2.Controls.Find("newDatePicker" + cntGetdate, true).FirstOrDefault() as DateTimePicker;//สร้าง DateTimePickerไว้panel2
+
+                                                             if (dummy != null)
+                                                             {
+                                                                 value = value.Replace(value.Substring(indexStart, indexEnd - indexStart + 2), dummy.Value.ToString(ConfigurationManager.AppSettings["dateFormat"])); //เก็บค่าค่าวันเดือนปีลงในตัวแปรValue
+                                                             }
+                                                             cntGetdate++;*/
+                                                        } break;
+                                                }
+                                            }//if
+                                            cell.SetCellValue(value);
+                                        }
+                                    }
+
+                                    if (mode == "write")
+                                    {
+                                        cell.SetCellValue(value);
+                                    }//wr
+                                }//case
+                                break;
+                        }//sw
+
+                        if (mode == "write")
+                        {
+                            using (var fileDummy = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                wb_xls.Write(fileDummy); //เขียนค่าvalueลงในExcel
+                                fileDummy.Close();
+                            }
+                        }//if wr
+                    }//cell
+                }//row
+            }//col
+            //}//checkall
+            // }//ifall
+        }
+
+        //Excel.xlsx___________________________________________________________________________________________________________________________________
+
+        private void connect_xlsx(string destination, string mode)
+        {
+            XSSFWorkbook wb_xlsx = null;
+            XSSFSheet sh_xlsx;
+
+            using (var file = new FileStream(destination, FileMode.Open, FileAccess.Read)) { wb_xlsx = new XSSFWorkbook(file); }
+            sh_xlsx = (XSSFSheet)wb_xlsx.GetSheet(wb_xlsx.GetSheetAt(wb_xlsx.ActiveSheetIndex).SheetName);
+            int cntGetdate = 1;
+
+            string column = ConfigurationManager.AppSettings["excelCol"];
+            var columns = column.Split(',');
+
+            int excelCol = int.Parse(ConfigurationManager.AppSettings["excelRow"]);
+
+            for (int i = 0; i <= columns.Length - 1; i++)
+            {
+                for (int j = 1; j <= excelCol; j++)
+                {
+                    string s = columns[i] + j.ToString();
+
+                    var cr = new CellReference(s);
+                    var row = sh_xlsx.GetRow(cr.Row);
+                    if (row == null) continue;
+                    var cell = row.GetCell(cr.Col);
+
+                    if (cell != null)
+                    {
+                        switch (cell.CellType)
+                        {
+                            case NPOI.SS.UserModel.CellType.String:
+                                {
+                                    string value = cell.StringCellValue;//case NPOI.SS.UserModel.CellType.Numeric: { double xx = sh_xls.GetRow(i).GetCell(j).NumericCellValue; } break;
+                                    int indexStart = value.IndexOf("<%");
+                                    int indexEnd = value.IndexOf("%>");
+                                    if (value.ToLower().Contains("<%getdate:"))
+                                    {
+                                        if (indexStart > 0 && indexEnd > 0)
+                                        {
+                                            string caption = value.Substring(indexStart + 10, indexEnd - indexStart - 10);
+
+                                            switch (mode)
+                                            {
+                                                case "read":
+                                                    {
+                                                        //DateTimePicker dummy = (DateTimePicker)panel2.Controls[i];
+                                                        //MessageBox.Show(dummy.Value.ToString());
+                                                        createDtPicker(cntGetdate, caption);
+                                                        cntGetdate++;
+                                                    } break;
+                                                case "write":
+                                                    {
+                                                        DateTimePicker dummy = panel2.Controls.Find("newDatePicker" + cntGetdate, true).FirstOrDefault() as DateTimePicker;//สร้าง DateTimePickerไว้panel2
+
+                                                        if (dummy != null)
+                                                        {
+                                                            value = value.Replace(value.Substring(indexStart, indexEnd - indexStart + 2), dummy.Value.ToString(ConfigurationManager.AppSettings["dateFormat"])); //เก็บค่าค่าวันเดือนปีลงในตัวแปรValue
+                                                        }
+                                                        cntGetdate++;
+                                                    } break;
+                                            }
+                                        }//if
+                                        cell.SetCellValue(value);
+                                    }//date
+                                }//case
+                                break;
+                        }//sw
+                    }
+                }//for j
+            }//for i
+
+            if (mode == "write")
+            {
+                using (var fileDummy = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    wb_xlsx.Write(fileDummy);
+                    fileDummy.Close();
+                }
+            }//mode Wr
+        }
+
+        //set Data___________________________________________________________________________________________________________________________________
+
+        private DataSet getFilterData(string destination)
+        {
+            DataTable dt = connect_excel(destination, "กลุ่มการออกเอกสาร$"); //เชื่อมต่อExcel sheetชื่อกลุ่มการออกเอกสาร
+            ds.Tables.Add(dt);
+            return ds;
+        }
+
+        private DataTable connect_excel(string destination, string sheetName) //เชื่อมต่อExcelกับc#
+        {
+            if (Path.GetExtension(destination).ToLower() == ".xls")
+            {
+                conn = new OleDbConnection(string.Concat("Provider=Microsoft.Jet.OleDb.4.0;"
+                    , "Data Source=", Application.StartupPath, destination, ";"
+                    , "Extended Properties=Excel 8.0"));
+            }
+            if (Path.GetExtension(destination).ToLower() == ".xlsx")
+            {
+                try
+                {
+                    conn = new OleDbConnection(string.Concat("Provider=Microsoft.ACE.OLEDB.12.0;"
+                        , "Data Source=", Application.StartupPath, destination, ";"
+                        , "Extended Properties=Excel 12.0 Xml"));
+                }
+                catch
+                {
+                    try
+                    {
+                        conn = new OleDbConnection(string.Concat("Provider=Microsoft.ACE.OLEDB.14.0;"
+                            , "Data Source=", Application.StartupPath, destination, ";"
+                            , "Extended Properties=Excel 14.0 Xml"));
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            conn = new OleDbConnection(string.Concat("Provider=Microsoft.ACE.OLEDB.15.0;"
+                                , "Data Source=", Application.StartupPath, destination, ";"
+                                , "Extended Properties=Excel 15.0 Xml"));
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+            }
+            if (conn != null)
+            {
+                conn.Open();
+            }
+            if (sheetName == "รายชื่อผู้ว่าราชการจังหวัด$")
+            {
+                dt = conn.GetSchema("Tables"); //ข้อมูลในตาราง
+                adapter = new OleDbDataAdapter(string.Concat("SELECT * FROM [", sheetName, "] WHERE(IsActive='Y') "), conn); //เลือกข้อมูลทั้งหมดในExcel sheetกลุ่มการออกเอกสาร
+                new OleDbCommandBuilder(adapter);
+                dt = new DataTable();
+                adapter.Fill(dt);
+                return dt;
+            }
+            if (sheetName == "รายชื่อพนักงาน$")
+            {
+                dt = conn.GetSchema("Tables"); //ข้อมูลในตาราง
+                adapter = new OleDbDataAdapter(string.Concat("SELECT * FROM [", sheetName, "] WHERE(IsActive='Y')  "), conn); //เลือกข้อมูลทั้งหมดในExcel sheetกลุ่มการออกเอกสาร /*AND FullName LIKE '%สุโข%'*/
+                new OleDbCommandBuilder(adapter);
+                dt = new DataTable();
+                adapter.Fill(dt);
+                return dt;
+            }
+            else
+                // {
+                dt = conn.GetSchema("Tables"); //ข้อมูลในตาราง
+            adapter = new OleDbDataAdapter(string.Concat("SELECT * FROM [", sheetName, "] "), conn); //เลือกข้อมูลทั้งหมดในExcel sheetกลุ่มการออกเอกสาร
+            new OleDbCommandBuilder(adapter);
+            dt = new DataTable();
+            adapter.Fill(dt);
+            return dt;
+            // }
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+        }
+
+        private void cbFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+        }
+    }//class
+}//name
+
+/*Caption
+   if Tag Loop
+       finding Tag Sheet
+            Caption => witch Sheet
+                Tag Cont (%
+
+   adapter = new OleDbDataAdapter(string.Concat("SELECT * FROM [", sheetName, "] WHERE(IsActive='Y' AND FullName LIKE '%สุโข%') "), conn); //เลือกข้อมูลทั้งหมดในExcel sheetกลุ่มการออกเอกสาร
+   new OleDbCommandBuilder(adapter);
+   dt = new DataTable();
+
+   for  tag Loop
+   {
+       Method (value)
+   }
+   else
+       Method (value)   */

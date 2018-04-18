@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<configuration>
+  <startup>
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
+  </startup>
+  <appSettings>
+    <add key="excelCol" value="A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z" />
+    <add key="excelRow" value="100" />
+    <add key="dateFormat" value="d MMMM yyyy" />
+    <add key="ClientSettingsProvider.ServiceUri" value="" />
+    <add key="pathTemplates" value=".\Templates\" />
+    <add key="pathOutput" value=".\Output\" />
+    <add key="pathMaster" value="\\Master\\" />
+    <add key ="รายชื่อผู้ว่าราชการจังหวัด" value="รายชื่อผู้ว่าราชการจังหวัด" />
+    <add key ="รายชื่อพนักงาน" value="รายชื่อพนักงาน" />
+    <add key ="Masterประชารัฐ.xlsx" value="Masterประชารัฐ.xlsx" />
+    <add key ="pathImage" value=".\Image\" />
+    <add key ="pathSignature" value=".\Master\signature\" />
+    <add key ="ProvinceID" value="ProvinceID" />
+    <add key ="RegionID" value="RegionID" />
+    <add key ="กลุ่มการออกเอกสาร" value="กลุ่มการออกเอกสาร$" />
+    <add key="FormatDate" value="yyyyMMdd_HHmmssf" />
+  </appSettings>
+  <system.web>
+    <membership defaultProvider="ClientAuthenticationMembershipProvider">
+      <providers>
+        <add name="ClientAuthenticationMembershipProvider" type="System.Web.ClientServices.Providers.ClientFormsAuthenticationMembershipProvider, System.Web.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" serviceUri="" />
+      </providers>
+    </membership>
+    <roleManager defaultProvider="ClientRoleProvider" enabled="true">
+      <providers>
+        <add name="ClientRoleProvider" type="System.Web.ClientServices.Providers.ClientRoleProvider, System.Web.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" serviceUri="" cacheTimeout="86400" />
+      </providers>
+    </roleManager>
+  </system.web>
+</configuration>

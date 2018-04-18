@@ -1,0 +1,138 @@
+<!--
+ hpSupplies160x600 - An HTML banner
+ @version v1.0.0
+ @date 10-7-2016 at 17:17:32
+ -->
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title>Babies-Asian-160x600</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="ad.size" content="width=160,height=600">
+    <style type="text/css">
+    #container_ad {
+        z-index: 20;
+        opacity: 0
+    }
+    
+    button {
+        background: 0 0;
+        outline: 0;
+        border: 0
+    }
+	 #cta_id {
+		position:absolute;
+        background-color:#9C0;
+		width:102px;
+		height:33px;
+		opacity:0;
+		z-index:399;
+		top:383px;
+		left:160px;
+		cursor:pointer;
+    }
+    </style>
+  <script>
+   var clickTag = "http://www.google.com";
+    </script>
+    <script>
+    function _politeLoad(e, t) {
+        var a, n = e.length,
+            d = 0,
+            s = function() {
+                ++d === n && t && t()
+            };
+        for (a = 0; a < n; a++) _loadScript(e[a], s)
+    }
+
+    function _loadScript(e, t) {
+        var a = document.createElement("script");
+        a.type = "text/javascript", a.readyState ? a.onreadystatechange = function() {
+            "loaded" != a.readyState && "complete" != a.readyState || (a.onreadystatechange = null, t())
+        } : a.onload = function() {
+            t()
+        }, a.src = e, document.getElementsByTagName("head")[0].appendChild(a)
+    }
+
+    function pageLoadedHandler() {
+        _politeLoad(["https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.2/TweenMax.min.js", "https://s0.2mdn.net/ads/studio/cached_libs/easeljs_0.8.1_58add2e69ca7fbe25e8f82a2b5f6a510_min.js", "script.js"], function() {
+            bannerInit()
+        });
+        var e = document.createElement("link");
+        e.setAttribute("rel", "stylesheet"), e.setAttribute("type", "text/css"), e.setAttribute("href", "style.css"), document.getElementsByTagName("head")[0].appendChild(e), document.getElementById("container_ad").style.display = "block"
+    }
+    </script>
+<script type="text/javascript">
+    
+      (function() {
+        var relegateNavigation = '';
+        var handleClickTagMessage = function(e) {
+          try {
+            var eventData = JSON.parse(e.data);
+          } catch (err) {
+            return;
+          }
+          if (eventData.isInitClickTag) {
+            if (eventData.clickTags) {
+              for (var i = 0; i < eventData.clickTags.length; i++) {
+                var clkTag = eventData.clickTags[i];
+                window[clkTag.name] = clkTag.url;
+              }
+            } else if (eventData.clickTag) {
+              window.clickTag = eventData.clickTag;
+            }
+            relegateNavigation = eventData.relegateNavigation;
+          }
+        };
+
+        if (open.call) {
+          window.open = function(open) {
+            return function(url, name, features) {
+              if (relegateNavigation === 'parent') {
+                var message = {'clickTag': url, 'isPostClickTag': true};
+                parent.postMessage(JSON.stringify(message), '*');
+              } else {
+                var args = [url, name];
+                if (features) {
+                  args.push(features);
+                }
+                open.apply(window, args);
+              }
+            };
+          }(window.open);
+        }
+
+        if (window.addEventListener) {
+          window.addEventListener(
+              'message', handleClickTagMessage, false);
+        } else {
+          window.attachEvent('onmessage', handleClickTagMessage);
+        }
+      })();
+    
+  </script><script type="text/javascript" src="index_data/TweenMax.js"></script><script type="text/javascript" src="index_data/easeljs_0.js"></script><script type="text/javascript" src="index_data/script.js"></script><link rel="stylesheet" type="text/css" href="index_data/style.css"></head>
+
+<body onload="pageLoadedHandler()">
+    <div id="container_ad" style="display: block; opacity: 1;">
+        <div id="content_ad">
+            <div id="bg"></div>
+            <div id="product" style="background-image: url(&quot;product.png&quot;); transform: matrix(1, 0, 0, 1, 0, 0); opacity: 1;"></div>
+            <div id="hd2" style="opacity: 0;"></div>
+            <div id="hd3" style="opacity: 1;"></div> 
+            
+            <dir id="tag" style="opacity: 1;"></dir>
+            <dir id="logo" style="opacity: 1;"></dir>
+            <canvas id="myCanvas" width="320" height="1200" style="width: 160px; height: 600px; opacity: 0;"></canvas>
+            <div id="hd1" style="opacity: 1; transform: matrix(0, 0, 0, 0, 0, 0);"></div>
+        </div>
+        <button id="background_exit_ad"></button>
+        <div id="cta_id" style="left: 29px;"></div>
+    </div>
+    <script>
+    document.getElementById("background_exit_ad").onclick = function() {
+        window.open(window.clickTag)
+    }
+    </script>
+
+
+
+</body></html>
